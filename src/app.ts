@@ -50,13 +50,40 @@ class ProjectInput {
             'submit',
             this.submitHandler 
             //this.submitHandler.bind(this) // need to reference this (object) in submitHandler
-        ) 
+        )
     }
 
     @autobind
     private submitHandler(event: Event) {
         event.preventDefault()
-        console.log(this.titleInputElement.value)
+        console.log("Submited...")
+        const userInput = this.garherUserInput()
+        if (Array.isArray(userInput)) {
+            const [title, desc, people] = userInput
+            console.log(title, desc, people)
+            this.clearInputs()
+          }
+    }
+
+    private garherUserInput(): [string, string, number] | void {
+        const enteredTitle = this.titleInputElement.value
+        const enteredDescription = this.descriptionInputElement.value
+        const enteredPeople = this.peopleInputElement.value
+
+        if (enteredTitle.trim().length == 0 ||
+            enteredDescription.trim().length == 0 ||
+            enteredPeople.trim().length == 0) {
+            alert('Ilegal input, please try againg!')
+            return // void
+        } else {
+            return[enteredTitle, enteredDescription, +enteredPeople]
+        }
+    }
+
+    private clearInputs() {
+        this.titleInputElement.value = ''
+        this.descriptionInputElement.value = ''
+        this.titleInputElement.value = ''
     }
 }
 
