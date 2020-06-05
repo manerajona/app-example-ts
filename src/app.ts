@@ -1,11 +1,43 @@
+
+// Validator
+interface Validatable {
+    value: string | number
+    required?: boolean
+    minLength?: number
+    maxLength?: number
+    min?: number
+    max?: number
+}
+
+function validate(validatableInput: Validatable): boolean {
+    let isValid = true;
+    if (validatableInput.required) {
+      isValid = isValid && validatableInput.value.toString().trim().length !== 0;
+    }
+    if (validatableInput.minLength != null && typeof validatableInput.value === 'string') {
+      isValid =
+        isValid && validatableInput.value.length >= validatableInput.minLength;
+    }
+    if (validatableInput.maxLength != null && typeof validatableInput.value === 'string') {
+      isValid =
+        isValid && validatableInput.value.length <= validatableInput.maxLength;
+    }
+    if (validatableInput.min != null && typeof validatableInput.value === 'number') {
+      isValid = isValid && validatableInput.value >= validatableInput.min;
+    }
+    if (validatableInput.max != null && typeof validatableInput.value === 'number') {
+      isValid = isValid && validatableInput.value <= validatableInput.max;
+    }
+    return isValid;
+  }
+
 // Autobind decorator
 function autobind(_: any, _1: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value
     const adjDescriptor: PropertyDescriptor = {
         configurable: true,
         get() {
-            const boundFn = originalMethod.bind(this)
-            return boundFn
+            return originalMethod.bind(this)
         }
     }
     return adjDescriptor
@@ -14,6 +46,38 @@ function autobind(_: any, _1: string, descriptor: PropertyDescriptor) {
 
 
 // Model
+class ProjectList {
+    templateElement: HTMLTemplateElement
+    hostElement: HTMLDivElement
+    element: HTMLElement
+
+    constructor(private type: 'available' | 'completed') {
+        this.templateElement = document.getElementById('project-list')! as HTMLTemplateElement
+        this.hostElement = document.getElementById('app')! as HTMLDivElement
+
+        const importedNode = document.importNode(this.templateElement.content, true)
+        this.element = importedNode.firstElementChild as HTMLElement
+        this.element.id = `${this.type}-projects`
+
+        this.attach()
+        this.renderContent()
+    }
+
+    private attach() {
+        this.hostElement.insertAdjacentElement('beforeend', this.element)
+    }
+
+    private renderContent() {
+        // <ul>
+        const listId = `${this.type}-project-list`
+        this.element.querySelector('ul')!.id = listId
+
+        // <h2>
+        this.element.querySelector('h2')!.textContent = this.type.toUpperCase().concat(' PROJECTS')
+    }
+}
+
+
 class ProjectInput {
 
     templateElement: HTMLTemplateElement
@@ -70,9 +134,25 @@ class ProjectInput {
         const enteredDescription = this.descriptionInputElement.value
         const enteredPeople = this.peopleInputElement.value
 
-        if (enteredTitle.trim().length == 0 ||
-            enteredDescription.trim().length == 0 ||
-            enteredPeople.trim().length == 0) {
+        const titleValidatable : Validatable = {
+            value: enteredTitle,
+            required: true
+        }
+        const descValidatable: Validatable = {
+            value: enteredDescription,
+            required: true
+        }
+        const peopleValidatable: Validatable = {
+            value: +enteredPeople,
+            required: true,
+            min: 1,
+            max: 9
+        }
+
+        if (!validate(titleValidatable) ||
+            !validate(descValidatable) ||
+            !validate(peopleValidatable)) {
+            
             alert('Ilegal input, please try againg!')
             return // void
         } else {
@@ -83,8 +163,11 @@ class ProjectInput {
     private clearInputs() {
         this.titleInputElement.value = ''
         this.descriptionInputElement.value = ''
-        this.titleInputElement.value = ''
+        this.peopleInputElement.value = ''
     }
 }
 
+// Values
 const prjInput = new ProjectInput()
+const availablePrjs = new ProjectList('available')
+const completedPrjs = new ProjectList('completed')
